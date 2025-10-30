@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Playground</title>
+  <style>
+    :root { --border:#e5e7eb; --muted:#6b7280; }
+    *{box-sizing:border-box} body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; padding:24px;}
+    .container{max-width:820px;margin:0 auto;}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .card{border:1px solid var(--border);border-radius:12px;padding:16px}
+    textarea{width:100%;resize:vertical;padding:8px;border-radius:8px;border:1px solid var(--border)}
+    button{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:white;cursor:pointer}
+    .bubble{display:flex;gap:8px;margin:8px 0}
+    .role{font-weight:600;min-width:80px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:8;align-items:center}
+    nav a{margin-left:12px}
+    pre{background:#f6f8fa;padding:8px;border-radius:8px;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 style="margin:0">⚡ AI Playground</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="#projects">Projects</a>
+        <a href="/api/chat" target="_blank" class="muted">/api/chat</a>
+      </nav>
+    </header>
+
+    <div class="card">
+      <h2>Chat Demo</h2>
+      <div id="messages" style="max-height:300px;overflow:auto;padding-right:6px"></div>
+
+      <textarea id="input" rows="3" placeholder="Type and press Enter…"></textarea>
+      <div class="row" style="margin-top:8px;display:flex;gap:8px">
+        <button id="send">Send</button>
+        <span id="status" class="muted"></span>
+      </div>
+
+      <p class="muted">This page is pure HTML + JS. Edit <code>index.html</code>. Server code lives in <code>/api/chat.js</code>.</p>
+    </div>
+
+    <div id="projects" class="card" style="margin-top:16px">
+      <h2>Projects</h2>
+      <ul>
+        <li>🎨 Prompt → Color palette</li>
+        <li>🧠 Idea Expander</li>
+        <li>📄 Mini RAG (“chat with my notes”)</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const statusEl = document.getElementById('status');
+
+    const messages = [{ role: 'assistant', content: 'Hi! Ask me anything ✨' }];
+    render();
+
+    function render() {
+      messagesEl.innerHTML = messages.map(m => \`
+        <div class="bubble">
+          <div class="role">\${m.role === 'user' ? 'You' : 'AI'}</div>
+          <div>\${m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>\`
+      ).join('');
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function send() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = '';
+      messages.push({ role: 'user', content: text });
+      render();
+      statusEl.textContent = 'Thinking…';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        messages.push({ role: 'assistant', content: data.content });
+      } catch (e) {
+        messages.push({ role: 'assistant', content: '⚠️ ' + (e.message || 'Something went wrong') });
+      } finally {
+        statusEl.textContent = '';
+        render();
+      }
+    }
+
+    sendBtn.addEventListener('click', send);
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+  </script>
+</body>
+</html>
