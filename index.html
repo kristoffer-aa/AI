@@ -5,104 +5,565 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI Playground</title>
   <style>
-    :root { --border:#e5e7eb; --muted:#6b7280; }
-    *{box-sizing:border-box} body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; padding:24px;}
-    .container{max-width:820px;margin:0 auto;}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .card{border:1px solid var(--border);border-radius:12px;padding:16px}
-    textarea{width:100%;resize:vertical;padding:8px;border-radius:8px;border:1px solid var(--border)}
-    button{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:white;cursor:pointer}
-    .bubble{display:flex;gap:8px;margin:8px 0}
-    .role{font-weight:600;min-width:80px}
-    .muted{color:var(--muted)}
-    .row{display:flex;gap:8;align-items:center}
-    nav a{margin-left:12px}
-    pre{background:#f6f8fa;padding:8px;border-radius:8px;overflow:auto}
+    :root {
+      --border: #e5e7eb;
+      --muted: #6b7280;
+      --sidebar-bg: #f9fafb;
+      --accent: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      margin: 0;
+      padding: 24px;
+      background: #ffffff;
+      color: #111827;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    nav a {
+      margin-left: 16px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 24px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      background: var(--sidebar-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: fit-content;
+      position: sticky;
+      top: 24px;
+    }
+
+    .tool-button {
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tool-button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .tool-button.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    }
+
+    .tool-button small {
+      color: var(--muted);
+    }
+
+    .main-panel {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-height: 540px;
+    }
+
+    .tool-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tool-panel.active {
+      display: flex;
+    }
+
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      resize: vertical;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font: inherit;
+    }
+
+    button {
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .messages {
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 6px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f9fafb;
+    }
+
+    .bubble {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .bubble .role {
+      font-weight: 600;
+      min-width: 64px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .swatch {
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 120px;
+    }
+
+    .swatch-color {
+      height: 60px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .idea-list {
+      display: grid;
+      gap: 12px;
+      padding-left: 16px;
+    }
+
+    pre {
+      background: #f6f8fa;
+      padding: 12px;
+      border-radius: 12px;
+      overflow: auto;
+      margin: 0;
+    }
+
+    @media (max-width: 960px) {
+      body {
+        padding: 16px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 16px;
+      }
+
+      .tool-button {
+        min-width: 220px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      nav a {
+        margin-left: 0;
+        margin-right: 16px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
+  <header class="layout" style="max-width:1080px; align-items: center; grid-template-columns: 1fr;">
+    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:16px; flex-wrap:wrap;">
       <h1 style="margin:0">⚡ AI Playground</h1>
       <nav>
         <a href="/">Home</a>
         <a href="#projects">Projects</a>
         <a href="/api/chat" target="_blank" class="muted">/api/chat</a>
       </nav>
-    </header>
-
-    <div class="card">
-      <h2>Chat Demo</h2>
-      <div id="messages" style="max-height:300px;overflow:auto;padding-right:6px"></div>
-
-      <textarea id="input" rows="3" placeholder="Type and press Enter…"></textarea>
-      <div class="row" style="margin-top:8px;display:flex;gap:8px">
-        <button id="send">Send</button>
-        <span id="status" class="muted"></span>
-      </div>
-
-      <p class="muted">This page is pure HTML + JS. Edit <code>index.html</code>. Server code lives in <code>/api/chat.js</code>.</p>
     </div>
+  </header>
 
-    <div id="projects" class="card" style="margin-top:16px">
+  <main class="layout">
+    <aside class="sidebar" aria-label="Tool selection">
+      <div>
+        <h2 style="margin:0 0 8px">Tools</h2>
+        <p class="muted" style="margin:0">Choose a demo to explore different workflows.</p>
+      </div>
+      <button class="tool-button active" data-tool-target="tool-chat">
+        <strong>Chat Assistant</strong>
+        <small>Ask questions, brainstorm ideas, and get instant answers.</small>
+      </button>
+      <button class="tool-button" data-tool-target="tool-palette">
+        <strong>Palette Generator</strong>
+        <small>Turn creative prompts into shareable color palettes.</small>
+      </button>
+      <button class="tool-button" data-tool-target="tool-notes">
+        <strong>Notes Summarizer</strong>
+        <small>Summarize your project snippets into concise briefs.</small>
+      </button>
+    </aside>
+
+    <div class="main-panel">
+      <section id="tool-chat" class="tool-panel active" aria-labelledby="tool-chat-heading">
+        <div>
+          <h2 id="tool-chat-heading" style="margin-bottom:8px">Chat Assistant</h2>
+          <p class="muted">Have a back-and-forth conversation with the API. Great for quick help or validating ideas before building.</p>
+        </div>
+        <div class="messages" data-messages></div>
+        <textarea data-input rows="3" placeholder="Type your question and press Enter…"></textarea>
+        <div class="status-row">
+          <button data-send>Send</button>
+          <span class="muted" data-status></span>
+        </div>
+        <p class="muted" style="margin-top:auto">This demo uses <code>/api/chat</code> to stream ideas in real time.</p>
+      </section>
+
+      <section id="tool-palette" class="tool-panel" aria-labelledby="tool-palette-heading">
+        <div>
+          <h2 id="tool-palette-heading" style="margin-bottom:8px">Palette Generator</h2>
+          <p class="muted">Describe the mood or theme you're aiming for and instantly generate a cohesive five-color palette.</p>
+        </div>
+        <input type="text" data-prompt placeholder="e.g. “Sunset over a futuristic skyline”" />
+        <div class="status-row">
+          <button data-generate>Generate palette</button>
+          <span class="muted" data-palette-status></span>
+        </div>
+        <div class="palette-grid" data-palette-grid></div>
+        <p class="muted">Each color is algorithmically derived from your prompt so similar phrases yield consistent palettes—perfect for fast prototyping.</p>
+      </section>
+
+      <section id="tool-notes" class="tool-panel" aria-labelledby="tool-notes-heading">
+        <div>
+          <h2 id="tool-notes-heading" style="margin-bottom:8px">Notes Summarizer</h2>
+          <p class="muted">Paste meeting notes or research highlights and get a concise summary with next-step suggestions.</p>
+        </div>
+        <textarea data-notes rows="6" placeholder="Drop your notes here…"></textarea>
+        <div class="status-row">
+          <button data-summarize>Summarize</button>
+          <span class="muted" data-summary-status></span>
+        </div>
+        <div data-summary-output class="idea-list"></div>
+        <p class="muted">Uses the chat endpoint under the hood with a summarization prompt tuned for actionable takeaways.</p>
+      </section>
+    </div>
+  </main>
+
+  <section id="projects" class="layout" style="margin-top:32px;">
+    <div class="main-panel" style="grid-column: span 2;">
       <h2>Projects</h2>
+      <p class="muted">Experiment with specialized tools, or clone this starter to design your own AI-powered demos.</p>
       <ul>
         <li>🎨 Prompt → Color palette</li>
         <li>🧠 Idea Expander</li>
         <li>📄 Mini RAG (“chat with my notes”)</li>
       </ul>
     </div>
-  </div>
+  </section>
 
   <script>
-    const messagesEl = document.getElementById('messages');
-    const inputEl = document.getElementById('input');
-    const sendBtn = document.getElementById('send');
-    const statusEl = document.getElementById('status');
+    const tools = {};
 
-    const messages = [{ role: 'assistant', content: 'Hi! Ask me anything ✨' }];
-    render();
-
-    function render() {
-      messagesEl.innerHTML = messages.map(m => \`
-        <div class="bubble">
-          <div class="role">\${m.role === 'user' ? 'You' : 'AI'}</div>
-          <div>\${m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-        </div>\`
-      ).join('');
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+    function showTool(id) {
+      const panels = document.querySelectorAll('.tool-panel');
+      const buttons = document.querySelectorAll('.tool-button');
+      panels.forEach(panel => {
+        panel.classList.toggle('active', panel.id === id);
+      });
+      buttons.forEach(button => {
+        const isActive = button.dataset.toolTarget === id;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive);
+      });
+      if (tools[id] && !tools[id].initialized) {
+        tools[id].init();
+        tools[id].initialized = true;
+      }
     }
 
-    async function send() {
-      const text = inputEl.value.trim();
-      if (!text) return;
-      inputEl.value = '';
-      messages.push({ role: 'user', content: text });
+    function initNavigation() {
+      document.querySelectorAll('.tool-button').forEach(button => {
+        button.addEventListener('click', () => showTool(button.dataset.toolTarget));
+      });
+    }
+
+    function initChat() {
+      const section = document.getElementById('tool-chat');
+      const messagesEl = section.querySelector('[data-messages]');
+      const inputEl = section.querySelector('[data-input]');
+      const sendBtn = section.querySelector('[data-send]');
+      const statusEl = section.querySelector('[data-status]');
+
+      const messages = [{ role: 'assistant', content: 'Hi! Ask me anything ✨' }];
       render();
-      statusEl.textContent = 'Thinking…';
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Request failed');
-        messages.push({ role: 'assistant', content: data.content });
-      } catch (e) {
-        messages.push({ role: 'assistant', content: '⚠️ ' + (e.message || 'Something went wrong') });
-      } finally {
-        statusEl.textContent = '';
+
+      function render() {
+        messagesEl.innerHTML = messages.map(m => `
+          <div class="bubble">
+            <div class="role">${m.role === 'user' ? 'You' : 'AI'}</div>
+            <div>${m.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          </div>`
+        ).join('');
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      async function send() {
+        const text = inputEl.value.trim();
+        if (!text) return;
+        inputEl.value = '';
+        messages.push({ role: 'user', content: text });
         render();
+        statusEl.textContent = 'Thinking…';
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Request failed');
+          messages.push({ role: 'assistant', content: data.content });
+        } catch (error) {
+          messages.push({ role: 'assistant', content: '⚠️ ' + (error.message || 'Something went wrong') });
+        } finally {
+          statusEl.textContent = '';
+          render();
+        }
+      }
+
+      sendBtn.addEventListener('click', send);
+      inputEl.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          send();
+        }
+      });
+    }
+
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function promptToColor(prompt, index) {
+      const base = hashString(`${prompt}-${index}`);
+      const hue = base % 360;
+      const saturation = 50 + (base % 30);
+      const lightness = 45 + (base % 20);
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+    function initPalette() {
+      const section = document.getElementById('tool-palette');
+      const promptInput = section.querySelector('[data-prompt]');
+      const generateBtn = section.querySelector('[data-generate]');
+      const grid = section.querySelector('[data-palette-grid]');
+      const statusEl = section.querySelector('[data-palette-status]');
+
+      function renderPalette(prompt) {
+        const colors = Array.from({ length: 5 }, (_, index) => promptToColor(prompt, index));
+        grid.innerHTML = colors.map(color => `
+          <div class="swatch">
+            <div class="swatch-color" style="background:${color}"></div>
+            <strong>${color}</strong>
+            <small class="muted">Click to copy</small>
+          </div>
+        `).join('');
+        const canCopy = navigator.clipboard && navigator.clipboard.writeText;
+        grid.querySelectorAll('.swatch').forEach((swatch, idx) => {
+          swatch.addEventListener('click', () => {
+            if (canCopy) {
+              navigator.clipboard.writeText(colors[idx]).then(() => {
+                statusEl.textContent = 'Copied ' + colors[idx];
+                setTimeout(() => statusEl.textContent = '', 1200);
+              });
+            } else {
+              statusEl.textContent = 'Copy manually: ' + colors[idx];
+            }
+          });
+        });
+      }
+
+      generateBtn.addEventListener('click', () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) {
+          statusEl.textContent = 'Describe the vibe you want first.';
+          return;
+        }
+        statusEl.textContent = 'Mixing colors…';
+        requestAnimationFrame(() => {
+          renderPalette(prompt);
+          statusEl.textContent = 'Palette ready!';
+          setTimeout(() => statusEl.textContent = '', 1200);
+        });
+      });
+    }
+
+    function initNotes() {
+      const section = document.getElementById('tool-notes');
+      const notesInput = section.querySelector('[data-notes]');
+      const summarizeBtn = section.querySelector('[data-summarize]');
+      const statusEl = section.querySelector('[data-summary-status]');
+      const outputEl = section.querySelector('[data-summary-output]');
+
+      summarizeBtn.addEventListener('click', async () => {
+        const notes = notesInput.value.trim();
+        if (!notes) {
+          statusEl.textContent = 'Add some notes to summarize first.';
+          return;
+        }
+        statusEl.textContent = 'Summarizing…';
+        outputEl.innerHTML = '';
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: 'system',
+                  content: 'Summarize the notes into bullet points and propose next steps. Return JSON with "summary" and "actions" arrays.'
+                },
+                { role: 'user', content: notes }
+              ]
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Request failed');
+          renderSummary(data.content);
+        } catch (error) {
+          outputEl.innerHTML = `<div class="muted">⚠️ ${error.message || 'Something went wrong'}</div>`;
+        } finally {
+          statusEl.textContent = '';
+        }
+      });
+
+      function renderSummary(responseText) {
+        let parsed;
+        try {
+          parsed = JSON.parse(responseText);
+        } catch (_) {
+          parsed = { summary: [responseText], actions: [] };
+        }
+
+        const createList = (items, emptyMessage) => {
+          const ul = document.createElement('ul');
+          const listItems = Array.isArray(items) ? items : [];
+          if (!listItems.length) {
+            const li = document.createElement('li');
+            li.textContent = emptyMessage;
+            ul.appendChild(li);
+            return ul;
+          }
+          listItems.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            ul.appendChild(li);
+          });
+          return ul;
+        };
+
+        const createSection = (title, margin, listEl) => {
+          const section = document.createElement('div');
+          const heading = document.createElement('h3');
+          heading.style.margin = margin;
+          heading.textContent = title;
+          section.appendChild(heading);
+          section.appendChild(listEl);
+          return section;
+        };
+
+        outputEl.replaceChildren();
+        outputEl.appendChild(
+          createSection(
+            'Highlights',
+            '0 0 8px',
+            createList(parsed.summary, 'No summary returned.')
+          )
+        );
+        outputEl.appendChild(
+          createSection(
+            'Next steps',
+            '16px 0 8px',
+            createList(parsed.actions, 'Nothing suggested yet.')
+          )
+        );
       }
     }
 
-    sendBtn.addEventListener('click', send);
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        send();
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+      initNavigation();
+      tools['tool-chat'] = { init: initChat, initialized: false };
+      tools['tool-palette'] = { init: initPalette, initialized: false };
+      tools['tool-notes'] = { init: initNotes, initialized: false };
+      showTool('tool-chat');
     });
   </script>
 </body>
