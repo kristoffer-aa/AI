@@ -512,18 +512,49 @@
         } catch (_) {
           parsed = { summary: [responseText], actions: [] };
         }
-        const summaryList = (parsed.summary || []).map(item => `<li>${item}</li>`).join('');
-        const actionList = (parsed.actions || []).map(item => `<li>${item}</li>`).join('');
-        outputEl.innerHTML = `
-          <div>
-            <h3 style="margin:0 0 8px">Highlights</h3>
-            <ul>${summaryList || '<li>No summary returned.</li>'}</ul>
-          </div>
-          <div>
-            <h3 style="margin:16px 0 8px">Next steps</h3>
-            <ul>${actionList || '<li>Nothing suggested yet.</li>'}</ul>
-          </div>
-        `;
+
+        const createList = (items, emptyMessage) => {
+          const ul = document.createElement('ul');
+          const listItems = Array.isArray(items) ? items : [];
+          if (!listItems.length) {
+            const li = document.createElement('li');
+            li.textContent = emptyMessage;
+            ul.appendChild(li);
+            return ul;
+          }
+          listItems.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            ul.appendChild(li);
+          });
+          return ul;
+        };
+
+        const createSection = (title, margin, listEl) => {
+          const section = document.createElement('div');
+          const heading = document.createElement('h3');
+          heading.style.margin = margin;
+          heading.textContent = title;
+          section.appendChild(heading);
+          section.appendChild(listEl);
+          return section;
+        };
+
+        outputEl.replaceChildren();
+        outputEl.appendChild(
+          createSection(
+            'Highlights',
+            '0 0 8px',
+            createList(parsed.summary, 'No summary returned.')
+          )
+        );
+        outputEl.appendChild(
+          createSection(
+            'Next steps',
+            '16px 0 8px',
+            createList(parsed.actions, 'Nothing suggested yet.')
+          )
+        );
       }
     }
 
